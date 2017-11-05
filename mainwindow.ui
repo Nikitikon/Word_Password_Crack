@@ -29,7 +29,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Close</string>
+     <string>Stop</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit">
@@ -37,7 +37,7 @@
      <rect>
       <x>10</x>
       <y>20</y>
-      <width>421</width>
+      <width>331</width>
       <height>20</height>
      </rect>
     </property>
@@ -149,6 +149,24 @@
     </property>
     <property name="text">
      <string>Подключения</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_Open">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>20</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Открыть</string>
     </property>
    </widget>
   </widget>

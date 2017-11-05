@@ -8,9 +8,11 @@
 #include <QList>
 #include <QStack>
 #include <QFile>
+#include <QFileDialog>
+#include <QtGlobal>
 
-#define PassLen 20
-#define WorkStack 41
+#define PassLen 10
+#define WorkStack 21
 #define AlphabetLen 36
 
 
@@ -26,6 +28,13 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void on_pushButton_2_clicked();
+
+    void on_pushButton_Close_clicked();
+
+    void on_pushButton_Open_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString fileName;
@@ -36,12 +45,17 @@ private:
     char lastPass[PassLen];
     QStack<QString> needCalc;
     char alphabet[AlphabetLen];
+    const quint64 maxVariant = 3656158440062976;
 
 
 
     void OpenWord();
     void initialization();
-    bool chackFile();
+    bool checkFile();
+    void erroeStop(QString errorMy);
+    bool myCopyFile();
+    void sendMassege(QString mass);
+
 };
 
 #endif // MAINWINDOW_H
