@@ -208,5 +208,7 @@ void MainWindow::startCalc()
                      er,SLOT(debugError(int,QString,QString,QString)));
 
     sendMassege("Word открыт");
+    
+    
 }
 

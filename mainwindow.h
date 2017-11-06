@@ -10,10 +10,12 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QtGlobal>
+#include <QMutex>
+#include <QtMath>
 
 #define PassLen 10
 #define WorkStack 21
-#define AlphabetLen 36
+#define AlphabetLen 15
 
 
 namespace Ui {
@@ -42,10 +44,13 @@ private:
     QAxObject* word;
     QAxObject* document;
     bool stopCalculating;
-    char lastPass[PassLen];
+    int lastPass;
     QStack<QString> needCalc;
     char alphabet[AlphabetLen];
-    const quint64 maxVariant = 3656158440062976;
+    quint64 maxVariant = 576650390625;
+    QList<QString> answer;
+    QMutex mutexForInterval;
+    QMutex mutexForList;
 
 
 
@@ -55,6 +60,13 @@ private:
     void erroeStop(QString errorMy);
     bool myCopyFile();
     void sendMassege(QString mass);
+    void CrackWord();
+
+signals:
+    void startWork();
+
+private slots:
+    void startCalc();
 
 };
 
