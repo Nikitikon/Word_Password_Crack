@@ -25,12 +25,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    outputthread.cpp
 
 HEADERS += \
         mainwindow.h \
-    exceptreceiver.h
+    exceptreceiver.h \
+    outputthread.h
 
 FORMS += \
         mainwindow.ui
 QT += axcontainer
+LIBS += -lws2_32

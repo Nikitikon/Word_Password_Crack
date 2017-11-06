@@ -12,6 +12,10 @@
 #include <QtGlobal>
 #include <QMutex>
 #include <QtMath>
+#include <QTimer>
+#include <QThread>
+
+#include "outputthread.h"
 
 #define PassLen 10
 #define WorkStack 21
@@ -50,7 +54,8 @@ private:
     quint64 maxVariant = 576650390625;
     QList<QString> answer;
     QMutex mutexForInterval;
-    QMutex mutexForList;
+    QMutex mutexForAnswerList;
+    QMutex mutexForNeedList;
 
 
 
@@ -59,14 +64,14 @@ private:
     bool checkFile();
     void erroeStop(QString errorMy);
     bool myCopyFile();
-    void sendMassege(QString mass);
     void CrackWord();
 
 signals:
-    void startWork();
+    void startWork(QString);
 
 private slots:
     void startCalc();
+    void sendMassege(QString mass);
 
 };
 
