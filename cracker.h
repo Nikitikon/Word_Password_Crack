@@ -33,7 +33,13 @@ public:
     explicit Cracker(QObject *parent = nullptr);
     ~Cracker();
 
-    bool getPasswordInterval(int interval[]);
+    bool getPasswordInterval(quint64 interval[]);
+    bool setCalcOnClient(quint64 interval[]);
+    bool setNeedCalc(quint64 interval[]);
+    bool setAnswer(QString assumedKey);
+    bool getCalcOnClient(quint64 interval[]);
+    bool getNeedCalc(quint64 interval[]);
+    QString getTryAnswer();
 
 
     QString fileName;
@@ -56,15 +62,16 @@ private:
     QAxObject* word;
     QAxObject* document;
     bool stopCalculating;
-    int lastPass;
+    quint64 lastPass;
     QStack<QString> needCalc;
     QQueue<QString> calcOnClient;
     char alphabet[AlphabetLen];
     quint64 maxVariant;
-    QList<QString> answer;
+    QQueue<QString> answer;
     QMutex mutexForInterval;
     QMutex mutexForAnswerList;
     QMutex mutexForNeedList;
+    QMutex mutexForClientCalcList;
     int bitMasck;
     int passwordStep;
 
@@ -74,7 +81,9 @@ private:
     void initialization();
     bool checkFile();
     bool myCopyFile();
-
+    QString converInterval(quint64 interval[]);
+    bool converString(QString str , quint64 interval[]);
+    void fromClientCalcToNeedCalc();
 
 };
 

@@ -85,8 +85,6 @@ void MainWindow::on_pushButton_2_clicked()
     ui->pushButton_2->setDisabled(true);
     ui->textBrowser->clear();
 
-    Cracker *c = new Cracker(nullptr);
-
     if (crac->fileName == "")
         crac->fileName = ui->lineEdit->text();
 

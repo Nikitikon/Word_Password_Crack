@@ -26,12 +26,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    outputthread.cpp
+    outputthread.cpp \
+    cracker.cpp
 
 HEADERS += \
         mainwindow.h \
     exceptreceiver.h \
-    outputthread.h
+    outputthread.h \
+    cracker.h
 
 FORMS += \
         mainwindow.ui
