@@ -19,6 +19,27 @@ Cracker::~Cracker()
         delete word;
 }
 
+bool Cracker::getPasswordInterval(int interval[])
+{
+    mutexForInterval.lock();
+    if (lastPass == maxVariant)
+    {
+        mutexForInterval.unlock();
+        stopCalculating = true;
+        return false;
+    }
+    interval[0] = lastPass;
+    lastPass += passwordStep;
+    if (lastPass > maxVariant)
+    {
+        lastPass = maxVariant;
+    }
+    interval[1] = lastPass;
+    mutexForInterval.unlock();
+    return true;
+
+}
+
 void Cracker::erroeStop(QString errorMy)
 {
     emit sendMassegeSignal(errorMy);
@@ -129,6 +150,7 @@ void Cracker::initialization()
     maxVariant = qPow(AlphabetLen, PassLen);
 
     needCalc.clear();
+    calcOnClient.clear();
 
     for (int i = 0; i < AlphabetLen; i++)
     {
@@ -146,7 +168,8 @@ void Cracker::initialization()
     if(file.exists())
         file.remove();
 
-    bitMasck += 3;
+    bitMasck = 3;
+    passwordStep = maxVariant * 0.0000001;
 }
 
 bool Cracker::checkFile()
@@ -164,3 +187,5 @@ bool Cracker::myCopyFile()
 {
     return QFile::copy(fileName, netFileName);
 }
+
+

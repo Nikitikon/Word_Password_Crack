@@ -16,6 +16,7 @@
 #include <QThread>
 #include <QLineEdit>
 #include <QTextBrowser>
+#include <QQueue>
 
 
 #include "exceptreceiver.h"
@@ -24,7 +25,6 @@
 #define PassLen 10
 #define WorkStack 21
 #define AlphabetLen 15
-#define Step 100
 
 class Cracker : public QObject
 {
@@ -32,6 +32,8 @@ class Cracker : public QObject
 public:
     explicit Cracker(QObject *parent = nullptr);
     ~Cracker();
+
+    bool getPasswordInterval(int interval[]);
 
 
     QString fileName;
@@ -56,6 +58,7 @@ private:
     bool stopCalculating;
     int lastPass;
     QStack<QString> needCalc;
+    QQueue<QString> calcOnClient;
     char alphabet[AlphabetLen];
     quint64 maxVariant;
     QList<QString> answer;
@@ -63,6 +66,7 @@ private:
     QMutex mutexForAnswerList;
     QMutex mutexForNeedList;
     int bitMasck;
+    int passwordStep;
 
     QLineEdit *fileNameBuff;
     QTextBrowser *outBrowser;
@@ -70,8 +74,6 @@ private:
     void initialization();
     bool checkFile();
     bool myCopyFile();
-
-
 
 
 };
