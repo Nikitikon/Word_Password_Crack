@@ -9,6 +9,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     initialization();
+    crac = new Cracker(nullptr);
+
+    connect(crac, SIGNAL(sendMassegeSignal(QString)), this, SLOT(sendMassege(QString)));
     //OpenWord();
 }
 
@@ -19,89 +22,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialization()
 {
-    fileName.clear();
-    netFileName = "netDoc.docx";
-    word = 0;
-    document = 0;
-    stopCalculating = false;
-    answer.clear();
-
-
     ui->progressBar->setMaximum(100);
     ui->progressBar->setMinimum(0);
     ui->progressBar->setValue(0);
-
-    lastPass = 0;
-    maxVariant = qPow(AlphabetLen, PassLen);
-
-    needCalc.clear();
-
-    for (int i = 0; i < AlphabetLen; i++)
-    {
-        if (i < 10)
-        {
-            alphabet[i] = (char)(i + 48);
-        }
-        else
-        {
-            alphabet[i] = (char)(i + 87);
-        }
-    }
-
-    QFile file(netFileName);
-    if(file.exists())
-        file.remove();
-
-    QObject::connect(this, SIGNAL(startWork(QString)), this, SLOT(sendMassege(QString)));
 }
 
-bool MainWindow::checkFile()
-{
-    fileName = ui->lineEdit->text();
-    QFile file1(fileName);
-
-    if (!file1.exists())
-        return false;
-
-    file1.close();
-    return true;
-}
-
-void MainWindow::erroeStop(QString errorMy)
-{
-    ui->textBrowser->append(errorMy);
-    stopCalculating = true;
-
-    if (word != NULL)
-        word->dynamicCall("Quit()");
-
-
-
-    if (document != NULL)
-        delete document;
-
-    if (word != NULL)
-        delete word;
-
-
-    ui->pushButton_2->setEnabled(true);
-    ui->pushButton_Open->setEnabled(true);
-}
-
-bool MainWindow::myCopyFile()
-{
-    return QFile::copy(fileName, netFileName);
-}
 
 void MainWindow::sendMassege(QString mass)
 {
     ui->textBrowser->append(mass);
 }
 
-void MainWindow::CrackWord()
-{
-
-}
 
 void MainWindow::OpenWord()
 {
@@ -153,105 +84,60 @@ void MainWindow::on_pushButton_2_clicked()
 {
     ui->pushButton_2->setDisabled(true);
     ui->textBrowser->clear();
-    stopCalculating = true;
 
-    startCalc();
+    Cracker *c = new Cracker(nullptr);
+
+    if (crac->fileName == "")
+        crac->fileName = ui->lineEdit->text();
+
+    QThread *thread = new QThread;
+    crac->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), crac, SLOT(process()));
+
+    connect(crac, SIGNAL(finished()), thread, SLOT(quit()));
+
+    connect(this, SIGNAL(stopAll()), crac, SLOT(stop()));
+
+    connect(crac, SIGNAL(finished()), crac, SLOT(deleteLater()));
+
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+    connect(crac, SIGNAL(finished()), crac, SLOT(stop()));
+
+    thread->start();
+
+    //thread->wait();
+
+    return;
+
 }
 
 void MainWindow::on_pushButton_Close_clicked()
 {
-    if (word != NULL)
-        word->dynamicCall("Quit()");
-    erroeStop("Остановка пользователя");
+    ui->pushButton_2->setEnabled(true);
+    ui->pushButton_Open->setEnabled(true);
+
+    crac->stop();
 }
 
 void MainWindow::on_pushButton_Open_clicked()
 {
-    fileName = QFileDialog::getOpenFileName(
+    crac->fileName = QFileDialog::getOpenFileName(
                 this,
                 "Open File",
                 "C://",
                 "Word Documents (*.docx)"
                 );
-    if (fileName == "")
-        fileName = ui->lineEdit->text();
+    if (crac->fileName == "")
+        crac->fileName = ui->lineEdit->text();
 
-    if (fileName == "")
+    if (crac->fileName == "")
         return;
 
-    ui->lineEdit->setText(fileName);
+    ui->lineEdit->setText(crac->fileName);
     ui->pushButton_2->setEnabled(true);
     ui->pushButton_Open->setDisabled(true);
 }
 
-void MainWindow::startCalc()
-{
-    initialization();
-
-    OutputThread outThread(ui->textBrowser);
-
-    outThread.setText("Начало работы");
-    outThread.start();
-    outThread.wait();
-
-    //emit startWork("Начало работы");
-
-    if(!checkFile())
-    {
-        erroeStop("Файл не обнаружен");
-        return;
-    }
-
-    if(!myCopyFile())
-    {
-        erroeStop("Не удалось копирование");
-        return;
-    }
-
-    //emit startWork("Файл скопирован");
-    outThread.setText("Файл скопирован");
-    outThread.start();
-    outThread.wait();
-
-    word = new QAxObject("Word.Application");
-    if (word == NULL)
-    {
-        erroeStop("Не удалось открыть Word");
-        return;
-    }
-
-    ExceptReceiver *er = new ExceptReceiver();
-    word->setProperty("Visible", true);
-    QObject::connect(word,SIGNAL(exception(int, QString, QString, QString)),
-                     er,SLOT(debugError(int,QString,QString,QString)));
-
-    //emit startWork("Word открыт");
-    outThread.setText("Word открыт");
-    outThread.start();
-    outThread.wait();
-
-    document = word->querySubObject("Documents");
-    if (word == NULL)
-    {
-        erroeStop("Не удалось открыть список документов");
-        return;
-    }
-
-    //emit startWork("Открыт список документов");
-    outThread.setText("Открыт список документов");
-    outThread.start();
-    outThread.wait();
-
-
-    for (int i = 0; i < 10; i ++)
-    {
-        ui->textBrowser->append(QString::number(i));
-        outThread.setText(QString::number(i));
-        outThread.start();
-        outThread.wait();
-        QThread::sleep(1);
-    }
-
-    //CrackWord();
-}
 

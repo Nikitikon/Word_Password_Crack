@@ -9,12 +9,12 @@ class OutputThread : public QThread
     Q_OBJECT
 
 public:
-    OutputThread(QTextBrowser *edit);
+    OutputThread(QObject *parent = nullptr);
     void setText(QString mass);
     void run ();
 
 private:
-    QTextBrowser *edit;
+    QObject edit;
     QString mass;
 };
 

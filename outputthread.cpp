@@ -1,8 +1,7 @@
 #include "outputthread.h"
 
-OutputThread::OutputThread(QTextBrowser *edit)
+OutputThread::OutputThread(QObject *parent)
 {
-    this->edit = edit;
 }
 
 void OutputThread::setText(QString mass)
@@ -12,5 +11,5 @@ void OutputThread::setText(QString mass)
 
 void OutputThread::run()
 {
-    edit->append(mass);
+    //edit->insertPlainText(mass + '\n');
 }

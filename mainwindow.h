@@ -16,6 +16,7 @@
 #include <QThread>
 
 #include "outputthread.h"
+#include "cracker.h"
 
 #define PassLen 10
 #define WorkStack 21
@@ -44,33 +45,19 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QString fileName;
-    QString netFileName;
-    QAxObject* word;
-    QAxObject* document;
-    bool stopCalculating;
-    int lastPass;
-    QStack<QString> needCalc;
-    char alphabet[AlphabetLen];
-    quint64 maxVariant = 576650390625;
-    QList<QString> answer;
-    QMutex mutexForInterval;
-    QMutex mutexForAnswerList;
-    QMutex mutexForNeedList;
 
+
+    Cracker *crac;
 
 
     void OpenWord();
     void initialization();
-    bool checkFile();
-    void erroeStop(QString errorMy);
-    bool myCopyFile();
-    void CrackWord();
 
 signals:
     void startWork(QString);
+    void stopAll();
 
 private slots:
-    void startCalc();
     void sendMassege(QString mass);
 
 };
