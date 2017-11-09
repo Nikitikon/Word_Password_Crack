@@ -25,8 +25,10 @@ private:
     SOCKADDR_IN addr;
     SOCKET serverSock;
     Cracker *crac;
+    bool stopListen;
 
     void initialization();
+    void serverListen();
 };
 
 #endif // SOCKETSERVER_H

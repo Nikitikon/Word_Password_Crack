@@ -231,6 +231,7 @@ void Cracker::process()
 
     stopCalculating = false;
 
+    QApplication::processEvents();
     if (stopCalculating)
     {
         emit finished();
@@ -243,6 +244,7 @@ void Cracker::process()
         return;
     }
 
+    QApplication::processEvents();
     if (stopCalculating)
     {
         emit finished();
@@ -256,8 +258,8 @@ void Cracker::process()
     }
 
     emit sendMassegeSignal("Файл скопирован");
-    QThread::usleep(5);
 
+    QApplication::processEvents();
     if (stopCalculating)
     {
         emit finished();
@@ -279,6 +281,7 @@ void Cracker::process()
     emit sendMassegeSignal("Word открыт");
     QThread::usleep(5);
 
+    QApplication::processEvents();
     if (stopCalculating)
     {
         emit finished();
@@ -295,6 +298,7 @@ void Cracker::process()
     emit sendMassegeSignal("Открыт список документов Word");
     QThread::usleep(5);
 
+    QApplication::processEvents();
     crackPassword();
 
 }
