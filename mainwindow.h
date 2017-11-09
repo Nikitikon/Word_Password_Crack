@@ -17,6 +17,7 @@
 
 #include "outputthread.h"
 #include "cracker.h"
+#include "socketserver.h"
 
 #define PassLen 10
 #define WorkStack 21
@@ -48,6 +49,7 @@ private:
 
 
     Cracker *crac;
+    SocketServer *serv;
 
 
     void OpenWord();
@@ -59,6 +61,7 @@ signals:
 
 private slots:
     void sendMassege(QString mass);
+    void sendNetMassege(QString mass);
 
 };
 

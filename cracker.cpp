@@ -197,16 +197,24 @@ void Cracker::erroeStop(QString errorMy)
     emit sendMassegeSignal(errorMy);
     stopCalculating = true;
 
+    QThread::usleep(10);
+
     if (word != NULL)
         word->dynamicCall("Quit()");
 
 
 
     if (document != NULL)
+    {
         delete document;
+        document = 0;
+    }
 
     if (word != NULL)
+    {
         delete word;
+        word = 0;
+    }
 
 }
 
@@ -218,7 +226,7 @@ void Cracker::stop()
 
 void Cracker::process()
 {
-    /*emit sendMassegeSignal("Начало работы");
+    emit sendMassegeSignal("Начало работы");
     QThread::usleep(5);
 
     stopCalculating = false;
@@ -286,31 +294,8 @@ void Cracker::process()
 
     emit sendMassegeSignal("Открыт список документов Word");
     QThread::usleep(5);
-    */
 
-    quint64 interval[2];
-    quint64 interval1[2];
-    for (int i = 0; i < 10; i++)
-    {
-        interval[0] = i;
-        interval[1] = i + 10;
-
-        if(!getPasswordInterval(interval1))
-            break;
-        QString t = converInterval(interval1);
-        setAnswer(t);
-
-    }
-
-    while (true) {
-        QString t = getTryAnswer();
-
-        if(t == ""){
-            break;
-        }
-
-        qDebug() << t;
-    }
+    crackPassword();
 
 }
 
@@ -346,9 +331,7 @@ void Cracker::initialization()
         file.remove();
 
     bitMasck = 3;
-    passwordStep = maxVariant * 0.0000001;
-    if (passwordStep < 100)
-        passwordStep = 100;
+    passwordStep = 50;
 }
 
 bool Cracker::checkFile()
@@ -405,11 +388,16 @@ bool Cracker::converString(QString str, quint64 interval[])
     return true;
 }
 
-void Cracker::fromClientCalcToNeedCalc()
+bool Cracker::fromClientCalcToNeedCalc()
 {
     mutexForClientCalcList.lock();
     mutexForNeedList.lock();
     QString temp = "";
+
+    if(calcOnClient.isEmpty())
+    {
+        return false;
+    }
 
     while (calcOnClient.isEmpty())
     {
@@ -419,6 +407,176 @@ void Cracker::fromClientCalcToNeedCalc()
 
     mutexForClientCalcList.unlock();
     mutexForNeedList.unlock();
+
+    return true;
 }
+
+QString Cracker::createPass(int step)
+{
+    QString temp = "";
+
+    while (step >= AlphabetLen) {
+        temp += alphabet[step % AlphabetLen];
+        step = step / AlphabetLen;
+    }
+    temp += alphabet[step];
+
+    return temp;
+}
+
+bool Cracker::crackPassword()
+{
+    QApplication::processEvents();
+    emit sendMassegeSignal("Взлом начат...");
+    QThread::usleep(5);
+
+    QVariant confirmconversions(false);
+    QVariant readonly(true);
+    QVariant addtorecentfiles(false);
+    QVariant passwordtemplate("");
+    QVariant revert(false);
+
+    QString passworddocument = "";
+
+    QAxObject* workDoc;
+
+    int count = 0;
+
+    while (!stopCalculating) {
+
+        QThread::usleep(5);
+
+        if(!checkFile())
+        {
+            erroeStop("Файл не обнаружен");
+            stop();
+            return false;
+        }
+
+        passworddocument = getTryAnswer();
+        if(passworddocument != "" && !stopCalculating)
+        {
+            QApplication::processEvents();
+
+            workDoc = document->querySubObject("Open(const QString&, const QVariant&, "
+                                              "const QVariant&, const QVariant&, const QString&, const QVariant&,"
+                                              "const QVariant&)", fileName, confirmconversions, readonly,
+                                              addtorecentfiles, passworddocument, passwordtemplate, revert);
+            if (workDoc != 0)
+            {
+                sendMassegeSignal("Пароль" + passworddocument);
+                word->querySubObject("ActiveDocument")->dynamicCall("Close()");
+                delete workDoc;
+                stop();
+                return true;
+            }
+
+            continue;
+        }
+
+        quint64 interval[2];
+
+        if(getNeedCalc(interval) && !stopCalculating)
+        {
+            for (int i = 0; i < passwordStep; i++)
+            {
+                QApplication::processEvents();
+
+                QThread::usleep(5);
+                passworddocument = createPass(interval[0]);
+                interval[0]++;
+                workDoc = document->querySubObject("Open(const QString&, const QVariant&, "
+                                                  "const QVariant&, const QVariant&, const QString&, const QVariant&,"
+                                                  "const QVariant&)", fileName, confirmconversions, readonly,
+                                                  addtorecentfiles, passworddocument, passwordtemplate, revert);
+                if (workDoc != 0)
+                {
+                    sendMassegeSignal("Пароль" + passworddocument);
+                    word->querySubObject("ActiveDocument")->dynamicCall("Close()");
+                    delete workDoc;
+                    stop();
+                    return true;
+                }
+            }
+
+            continue;
+        }
+
+        if(getPasswordInterval(interval) && !stopCalculating)
+        {
+            for (int i = 0; i < passwordStep; i++)
+            {
+                QApplication::processEvents();
+
+                if(stopCalculating) break;
+                QThread::usleep(1);
+                passworddocument = createPass(interval[0]);
+                interval[0]++;
+                workDoc = document->querySubObject("Open(const QString&, const QVariant&, "
+                                                  "const QVariant&, const QVariant&, const QString&, const QVariant&,"
+                                                  "const QVariant&)", fileName, confirmconversions, readonly,
+                                                  addtorecentfiles, passworddocument, passwordtemplate, revert);
+                sendMassegeSignal(passworddocument);
+
+                if (workDoc != 0)
+                {
+                    sendMassegeSignal("Пароль" + passworddocument);
+                    word->querySubObject("ActiveDocument")->dynamicCall("Close()");
+                    delete workDoc;
+                    stop();
+                    return true;
+                }
+            }
+
+            continue;
+        }
+
+
+        if(getCalcOnClient(interval) && count >= 6)
+        {
+            for (int i = 0; i < passwordStep; i++)
+            {
+                QThread::usleep(5);
+                QApplication::processEvents();
+
+                passworddocument = createPass(interval[0]);
+                interval[0]++;
+                workDoc = document->querySubObject("Open(const QString&, const QVariant&, "
+                                                  "const QVariant&, const QVariant&, const QString&, const QVariant&,"
+                                                  "const QVariant&)", fileName, confirmconversions, readonly,
+                                                  addtorecentfiles, passworddocument, passwordtemplate, revert);
+                if (workDoc != 0)
+                {
+                    sendMassegeSignal("Пароль" + passworddocument);
+                    word->querySubObject("ActiveDocument")->dynamicCall("Close()");
+                    delete workDoc;
+                    stop();
+                    return true;
+                }
+            }
+
+            count--;
+
+            if(fromClientCalcToNeedCalc())
+            {
+                count = 0;
+                continue;
+            }
+        }
+
+        QThread::sleep(5);
+        count++;
+
+        if(count == 6)
+        {
+            delete workDoc;
+            sendMassegeSignal("Пароль не найден");
+            stop();
+            return false;
+        }
+    }
+    return true;
+}
+
 
 

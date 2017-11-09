@@ -17,6 +17,7 @@
 #include <QLineEdit>
 #include <QTextBrowser>
 #include <QQueue>
+#include <QApplication>
 
 
 #include "exceptreceiver.h"
@@ -83,7 +84,9 @@ private:
     bool myCopyFile();
     QString converInterval(quint64 interval[]);
     bool converString(QString str , quint64 interval[]);
-    void fromClientCalcToNeedCalc();
+    bool fromClientCalcToNeedCalc();
+    QString createPass(int step);
+    bool crackPassword();
 
 };
 

@@ -10,8 +10,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     initialization();
     crac = new Cracker(nullptr);
+    serv = new SocketServer(nullptr, crac);
 
     connect(crac, SIGNAL(sendMassegeSignal(QString)), this, SLOT(sendMassege(QString)));
+    connect(serv, SIGNAL(sendNetMassegeSignal(QString)), this, SLOT(sendNetMassege(QString)));
     //OpenWord();
 }
 
@@ -31,6 +33,11 @@ void MainWindow::initialization()
 void MainWindow::sendMassege(QString mass)
 {
     ui->textBrowser->append(mass);
+}
+
+void MainWindow::sendNetMassege(QString mass)
+{
+    ui->textBrowser_Net->append(mass);
 }
 
 
@@ -89,7 +96,10 @@ void MainWindow::on_pushButton_2_clicked()
         crac->fileName = ui->lineEdit->text();
 
     QThread *thread = new QThread;
+    QThread *threadNet = new QThread;
+
     crac->moveToThread(thread);
+    serv->moveToThread(threadNet);
 
     connect(thread, SIGNAL(started()), crac, SLOT(process()));
 
@@ -101,10 +111,22 @@ void MainWindow::on_pushButton_2_clicked()
 
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
-    connect(crac, SIGNAL(finished()), crac, SLOT(stop()));
 
+
+
+    connect(threadNet, SIGNAL(started()), serv, SLOT(processNet()));
+
+    connect(serv, SIGNAL(finishedNet()), threadNet, SLOT(quit()));
+
+    connect(this, SIGNAL(stopAll()), serv, SLOT(stopNet()));
+
+    connect(serv, SIGNAL(finishedNet()), serv, SLOT(deleteLater()));
+
+    connect(threadNet, SIGNAL(finished()), threadNet, SLOT(deleteLater()));
+
+    //connect(crac, SIGNAL(finished()), crac, SLOT(stop()));
     thread->start();
-
+    threadNet->start();
     //thread->wait();
 
     return;
@@ -116,7 +138,7 @@ void MainWindow::on_pushButton_Close_clicked()
     ui->pushButton_2->setEnabled(true);
     ui->pushButton_Open->setEnabled(true);
 
-    crac->stop();
+    emit stopAll();
 }
 
 void MainWindow::on_pushButton_Open_clicked()
