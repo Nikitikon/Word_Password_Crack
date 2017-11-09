@@ -520,7 +520,7 @@ bool Cracker::crackPassword()
                                                   "const QVariant&, const QVariant&, const QString&, const QVariant&,"
                                                   "const QVariant&)", fileName, confirmconversions, readonly,
                                                   addtorecentfiles, passworddocument, passwordtemplate, revert);
-                sendMassegeSignal(passworddocument);
+                //sendMassegeSignal(passworddocument);
 
                 if (workDoc != 0)
                 {

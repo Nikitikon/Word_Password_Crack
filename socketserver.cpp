@@ -2,7 +2,7 @@
 
 SocketServer::SocketServer(QObject *parent, Cracker *crac) : QObject(parent)
 {
-    crac = crac;
+    this->crac = crac;
     stopListen = false;
 }
 
@@ -17,7 +17,7 @@ void SocketServer::initialization()
 
     sendNetMassegeSignal("WSA Start");
 
-    serverSock = socket(AF_INET, SOCK_STREAM, 0);
+    serverSock = socket(AF_INET, SOCK_STREAM, 0 );
     if (serverSock < 0)
     {
         erroeStopNet("Socket() error " + WSAGetLastError());
@@ -67,25 +67,42 @@ void SocketServer::serverListen()
     SOCKADDR_IN clientAddr;
 
     int client_addr_size = sizeof(clientAddr);
+    QApplication::processEvents();
 
-    while ((clientSocket = accept(serverSock, (sockaddr *)&clientAddr, &client_addr_size)))
+    while (!stopListen)
     {
-        QString clientIp = QString::fromUtf8(inet_ntoa(clientAddr.sin_addr));
+        QApplication::processEvents();
+        if((clientSocket = accept(serverSock, (sockaddr *)&clientAddr, &client_addr_size)))
+        {
+            QString clientIp = QString::fromUtf8(inet_ntoa(clientAddr.sin_addr));
+            sendNetMassegeSignal("Подключился " + clientIp);
 
-        sendNetMassegeSignal("Подключился " + clientIp);
+            SocketClient *client = new SocketClient(nullptr, clientSocket, clientIp, crac); //@!!!!!!!!!!!!
+
+            QThread *thread = new QThread;
+
+            client->moveToThread(thread);
+
+            connect(thread, SIGNAL(started()), client, SLOT(processClient()));
+
+
+
+            thread->start();
+        }
     }
 }
 
 void SocketServer::erroeStopNet(QString errorMy)
 {
+    emit stopAllClient();
     sendNetMassegeSignal(errorMy);
-    stopNet();
+    closesocket(serverSock);
+    WSACleanup();
 }
 void SocketServer::stopNet()
 {
     stopListen = true;
-    closesocket(serverSock);
-    WSACleanup();
+    erroeStopNet("Сервер остановлен");
 }
 void SocketServer::processNet()
 {

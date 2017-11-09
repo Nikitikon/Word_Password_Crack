@@ -111,7 +111,7 @@ void MainWindow::on_pushButton_2_clicked()
 
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
-
+    connect(thread, SIGNAL(finished()), this, SLOT(on_pushButton_Close_clicked()));
 
 
     connect(threadNet, SIGNAL(started()), serv, SLOT(processNet()));

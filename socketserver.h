@@ -5,6 +5,7 @@
 
 #include "winsock2.h"
 #include "cracker.h"
+#include "socketclient.h"
 
 class SocketServer : public QObject
 {
@@ -15,6 +16,7 @@ public:
 signals:
     void sendNetMassegeSignal(QString);
     void finishedNet();
+    void stopAllClient();
 
 public slots:
     void erroeStopNet(QString errorMy);
