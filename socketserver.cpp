@@ -8,6 +8,8 @@ SocketServer::SocketServer(QObject *parent, Cracker *crac) : QObject(parent)
 
 void SocketServer::initialization()
 {
+    stopListen = false;
+
     char wsaBuff[1024];
     if (WSAStartup(0x202, (WSADATA *)&wsaBuff))
     {
@@ -69,25 +71,48 @@ void SocketServer::serverListen()
     int client_addr_size = sizeof(clientAddr);
     QApplication::processEvents();
 
+    struct timeval timeout;
+    struct fd_set fds;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 250000;
+
     while (!stopListen)
     {
         QApplication::processEvents();
-        if((clientSocket = accept(serverSock, (sockaddr *)&clientAddr, &client_addr_size)))
+
+        FD_ZERO(&fds);
+        FD_SET(serverSock, &fds);
+        int slct = select(0, &fds, 0, 0, &timeout);
+
+        if (slct == -1) continue;
+
+        if (slct != 0)
         {
-            QString clientIp = QString::fromUtf8(inet_ntoa(clientAddr.sin_addr));
-            sendNetMassegeSignal("Подключился " + clientIp);
+            if((clientSocket = accept(serverSock, (sockaddr *)&clientAddr, &client_addr_size)))
+            {
+                QString clientIp = QString::fromUtf8(inet_ntoa(clientAddr.sin_addr));
+                if(!stopListen)
+                    sendNetMassegeSignal("Подключился " + clientIp);
 
-            SocketClient *client = new SocketClient(nullptr, clientSocket, clientIp, crac); //@!!!!!!!!!!!!
+                SocketClient *client = new SocketClient(nullptr, clientSocket, clientIp, crac); //@!!!!!!!!!!!!
 
-            QThread *thread = new QThread;
+                QThread *thread = new QThread;
 
-            client->moveToThread(thread);
+                client->moveToThread(thread);
 
-            connect(thread, SIGNAL(started()), client, SLOT(processClient()));
+                connect(thread, SIGNAL(started()), client, SLOT(processClient()));
+
+                connect(client, SIGNAL(finished()), thread, SLOT(quit()));
+
+                connect(this, SIGNAL(stopAllClient()), client, SLOT(stop()));
+
+                connect(client, SIGNAL(finished()), client, SLOT(deleteLater()));
+
+                connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
 
-
-            thread->start();
+                thread->start();
+            }
         }
     }
 }

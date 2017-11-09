@@ -50,6 +50,7 @@ public:
 signals:
     void sendMassegeSignal(QString);
     void finished();
+    void stopServer();
 
 public slots:
     void erroeStop(QString errorMy);

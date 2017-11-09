@@ -222,10 +222,13 @@ void Cracker::stop()
 {
     stopCalculating = true;
     erroeStop("Процесс остановлен");
+    emit stopServer();
 }
 
 void Cracker::process()
 {
+    initialization();
+
     emit sendMassegeSignal("Начало работы");
     QThread::usleep(5);
 
@@ -305,7 +308,6 @@ void Cracker::process()
 
 void Cracker::initialization()
 {
-    fileName.clear();
     netFileName = "netDoc.docx";
     word = 0;
     document = 0;

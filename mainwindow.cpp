@@ -91,6 +91,10 @@ void MainWindow::on_pushButton_2_clicked()
 {
     ui->pushButton_2->setDisabled(true);
     ui->textBrowser->clear();
+    ui->textBrowser_Net->clear();
+
+    ui->textBrowser->clearHistory();
+    ui->textBrowser_Net->clearHistory();
 
     if (crac->fileName == "")
         crac->fileName = ui->lineEdit->text();
@@ -118,13 +122,15 @@ void MainWindow::on_pushButton_2_clicked()
 
     connect(serv, SIGNAL(finishedNet()), threadNet, SLOT(quit()));
 
-    connect(this, SIGNAL(stopAll()), serv, SLOT(stopNet()));
+   // connect(this, SIGNAL(stopAll()), serv, SLOT(stopNet()));
 
     connect(serv, SIGNAL(finishedNet()), serv, SLOT(deleteLater()));
 
     connect(threadNet, SIGNAL(finished()), threadNet, SLOT(deleteLater()));
 
-    //connect(crac, SIGNAL(finished()), crac, SLOT(stop()));
+
+    connect(crac, SIGNAL(stopServer()), serv, SLOT(stopNet()));
+
     thread->start();
     threadNet->start();
     //thread->wait();
@@ -137,6 +143,15 @@ void MainWindow::on_pushButton_Close_clicked()
 {
     ui->pushButton_2->setEnabled(true);
     ui->pushButton_Open->setEnabled(true);
+
+    ui->textBrowser->clear();
+    ui->textBrowser_Net->clear();
+
+    ui->textBrowser->clearHistory();
+    ui->textBrowser_Net->clearHistory();
+
+    ui->label_speed->setText("");
+    ui->progressBar->setValue(0);
 
     emit stopAll();
 }

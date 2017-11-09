@@ -28,14 +28,17 @@ SOURCES += \
         mainwindow.cpp \
     outputthread.cpp \
     cracker.cpp \
-    socketserver.cpp
+    socketserver.cpp \
+    socketclient.cpp
 
 HEADERS += \
         mainwindow.h \
     exceptreceiver.h \
     outputthread.h \
     cracker.h \
-    socketserver.h
+    socketserver.h \
+    cracker.h \
+    socketclient.h
 
 FORMS += \
         mainwindow.ui
