@@ -22,6 +22,7 @@ public slots:
     void erroeStopNet(QString errorMy);
     void stopNet();
     void processNet();
+    void clientMassege(QString mass);
 
 private:
     SOCKADDR_IN addr;

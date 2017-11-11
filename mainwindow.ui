@@ -156,10 +156,10 @@
    <widget class="QLabel" name="label_speed">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>190</x>
       <y>230</y>
-      <width>351</width>
-      <height>16</height>
+      <width>231</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">

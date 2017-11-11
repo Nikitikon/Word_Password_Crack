@@ -176,6 +176,27 @@ bool Cracker::getNeedCalc(quint64 interval[])
     return true;
 }
 
+int Cracker::getMask()
+{
+    mutexBitMasck.lock();
+    int temp = bitMasck;
+    mutexBitMasck.unlock();
+
+    return temp;
+}
+
+int Cracker::getStep()
+{
+    return passwordStep;
+}
+
+void Cracker::setMask(int mask)
+{
+    mutexBitMasck.lock();
+    bitMasck = mask;
+    mutexBitMasck.unlock();
+}
+
 QString Cracker::getTryAnswer()
 {
     mutexForAnswerList.lock();
@@ -222,6 +243,8 @@ void Cracker::stop()
 {
     stopCalculating = true;
     erroeStop("Процесс остановлен");
+    sendProgressBarValue(0);
+    sendSpeed(0);
     emit stopServer();
 }
 
@@ -315,7 +338,11 @@ void Cracker::initialization()
     answer.clear();
 
     lastPass = 0;
-    maxVariant = qPow(AlphabetLen, PassLen);
+    maxVariant = 10000; //qPow(AlphabetLen, PassLen);
+
+    checkStop = false;
+
+    speedMap.clear();
 
     needCalc.clear();
     calcOnClient.clear();
@@ -450,7 +477,11 @@ bool Cracker::crackPassword()
 
     while (!stopCalculating) {
 
-        QThread::usleep(5);
+        //QThread::usleep(5);
+
+        mutexForInterval.lock();
+        sendProgressBarValue(((double)lastPass - needCalc.size() * passwordStep)/ (double)maxVariant);
+        mutexForInterval.unlock();
 
         if(!checkFile())
         {
@@ -470,7 +501,7 @@ bool Cracker::crackPassword()
                                               addtorecentfiles, passworddocument, passwordtemplate, revert);
             if (workDoc != 0)
             {
-                sendMassegeSignal("Пароль" + passworddocument);
+                sendMassegeSignal("Пароль \"" + passworddocument + "\"");
                 word->querySubObject("ActiveDocument")->dynamicCall("Close()");
                 delete workDoc;
                 stop();
@@ -484,38 +515,61 @@ bool Cracker::crackPassword()
 
         if(getNeedCalc(interval) && !stopCalculating)
         {
+
             for (int i = 0; i < passwordStep; i++)
             {
+                mutexForInterval.lock();
+                sendProgressBarValue(((double)lastPass - (double)needCalc.size() * passwordStep)/ (double)maxVariant);
+                mutexForInterval.unlock();
+
                 QApplication::processEvents();
 
-                QThread::usleep(5);
+                if(stopCalculating) break;
+
+                QTime time;
+                time.start();
+
                 passworddocument = createPass(interval[0]);
                 interval[0]++;
                 workDoc = document->querySubObject("Open(const QString&, const QVariant&, "
                                                   "const QVariant&, const QVariant&, const QString&, const QVariant&,"
                                                   "const QVariant&)", fileName, confirmconversions, readonly,
                                                   addtorecentfiles, passworddocument, passwordtemplate, revert);
+
+                int workTime = time.elapsed();
+                double speed = calcSpeed((double)1000 / workTime);
+                emit  sendSpeed(speed);
+
                 if (workDoc != 0)
                 {
-                    sendMassegeSignal("Пароль" + passworddocument);
+                    sendMassegeSignal("Пароль \"" + passworddocument + "\"");
                     word->querySubObject("ActiveDocument")->dynamicCall("Close()");
                     delete workDoc;
                     stop();
                     return true;
                 }
+
             }
+
 
             continue;
         }
 
         if(getPasswordInterval(interval) && !stopCalculating)
         {
+
             for (int i = 0; i < passwordStep; i++)
             {
+                mutexForInterval.lock();
+                sendProgressBarValue(((double)lastPass - (double)needCalc.size() * passwordStep)/ (double)maxVariant);
+                mutexForInterval.unlock();
+
                 QApplication::processEvents();
 
+                QTime time;
+                time.start();
+
                 if(stopCalculating) break;
-                QThread::usleep(1);
                 passworddocument = createPass(interval[0]);
                 interval[0]++;
                 workDoc = document->querySubObject("Open(const QString&, const QVariant&, "
@@ -524,26 +578,37 @@ bool Cracker::crackPassword()
                                                   addtorecentfiles, passworddocument, passwordtemplate, revert);
                 //sendMassegeSignal(passworddocument);
 
+                int workTime = time.elapsed();
+                double speed = calcSpeed((double)1000 / workTime);
+                emit  sendSpeed(speed);
+
                 if (workDoc != 0)
                 {
-                    sendMassegeSignal("Пароль" + passworddocument);
+                    sendMassegeSignal("Пароль \"" + passworddocument + "\"");
                     word->querySubObject("ActiveDocument")->dynamicCall("Close()");
                     delete workDoc;
                     stop();
                     return true;
                 }
-            }
 
+            }
             continue;
         }
 
 
-        if(getCalcOnClient(interval) && count >= 6)
+        if(getCalcOnClient(interval) && count >= 6 && !checkStop)
         {
+            sendMassegeSignal("Возможно один из клиентов ошибся");
+            sendMassegeSignal("Подождите, идет перепроверка...");
+
             for (int i = 0; i < passwordStep; i++)
             {
-                QThread::usleep(5);
                 QApplication::processEvents();
+
+                QTime time;
+                time.start();
+
+                if(stopCalculating) break;
 
                 passworddocument = createPass(interval[0]);
                 interval[0]++;
@@ -551,9 +616,14 @@ bool Cracker::crackPassword()
                                                   "const QVariant&, const QVariant&, const QString&, const QVariant&,"
                                                   "const QVariant&)", fileName, confirmconversions, readonly,
                                                   addtorecentfiles, passworddocument, passwordtemplate, revert);
+
+                int workTime = time.elapsed();
+                double speed = calcSpeed((double)passwordStep * 1000 / workTime);
+                emit  sendSpeed(speed);
+
                 if (workDoc != 0)
                 {
-                    sendMassegeSignal("Пароль" + passworddocument);
+                    sendMassegeSignal("Пароль \"" + passworddocument + "\"");
                     word->querySubObject("ActiveDocument")->dynamicCall("Close()");
                     delete workDoc;
                     stop();
@@ -572,6 +642,7 @@ bool Cracker::crackPassword()
 
         QThread::sleep(5);
         count++;
+        checkStop = true;
 
         if(count == 6)
         {
@@ -582,6 +653,21 @@ bool Cracker::crackPassword()
         }
     }
     return true;
+}
+
+double Cracker::calcSpeed(double mainSpeed)
+{
+    mutexForSpeedMap.lock();
+    double speed = mainSpeed;
+
+    QMap<QString,double>::iterator it = speedMap.begin();
+    for(;it != speedMap.end(); ++it)
+    {
+        speed += it.value();
+    }
+    mutexForSpeedMap.unlock();
+
+    return speed;
 }
 
 

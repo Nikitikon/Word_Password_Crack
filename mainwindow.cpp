@@ -40,6 +40,16 @@ void MainWindow::sendNetMassege(QString mass)
     ui->textBrowser_Net->append(mass);
 }
 
+void MainWindow::updateProgressBar(double progres)
+{
+    ui->progressBar->setValue(progres * 100);
+}
+
+void MainWindow::visualSpeed(double speed)
+{
+    ui->label_speed->setText(QString::number(speed * 60) + "\tvar/min");
+}
+
 
 void MainWindow::OpenWord()
 {
@@ -117,6 +127,10 @@ void MainWindow::on_pushButton_2_clicked()
 
     connect(thread, SIGNAL(finished()), this, SLOT(on_pushButton_Close_clicked()));
 
+    connect(crac, SIGNAL(sendSpeed(double)), this, SLOT(visualSpeed(double)));
+
+    connect(crac, SIGNAL(sendProgressBarValue(double)), this, SLOT(updateProgressBar(double)));
+
 
     connect(threadNet, SIGNAL(started()), serv, SLOT(processNet()));
 
@@ -141,19 +155,21 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_pushButton_Close_clicked()
 {
+    emit stopAll();
+
+    QThread::sleep(1);
+
     ui->pushButton_2->setEnabled(true);
     ui->pushButton_Open->setEnabled(true);
+
+    ui->label_speed->setText("");
+    ui->progressBar->setValue(0);
 
     ui->textBrowser->clear();
     ui->textBrowser_Net->clear();
 
     ui->textBrowser->clearHistory();
     ui->textBrowser_Net->clearHistory();
-
-    ui->label_speed->setText("");
-    ui->progressBar->setValue(0);
-
-    emit stopAll();
 }
 
 void MainWindow::on_pushButton_Open_clicked()

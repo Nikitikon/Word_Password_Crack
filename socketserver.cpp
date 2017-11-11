@@ -54,7 +54,7 @@ void SocketServer::initialization()
         return;
     }
 
-    serverListen();
+
 }
 
 void SocketServer::serverListen()
@@ -102,14 +102,17 @@ void SocketServer::serverListen()
 
                 connect(thread, SIGNAL(started()), client, SLOT(processClient()));
 
-                connect(client, SIGNAL(finished()), thread, SLOT(quit()));
+                connect(client, SIGNAL(finishedClient()), thread, SLOT(quit()));
 
-                connect(this, SIGNAL(stopAllClient()), client, SLOT(stop()));
+                connect(this, SIGNAL(stopAllClient()), client, SLOT(stopClient()));
 
-                connect(client, SIGNAL(finished()), client, SLOT(deleteLater()));
+                connect(client, SIGNAL(finishedClient()), client, SLOT(deleteLater()));
 
                 connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
+                connect(client, SIGNAL(sendClientMassegeSignal(QString)), this, SLOT(clientMassege(QString)));
+
+                connect(client, SIGNAL(criticalErrorSignal()), crac, SLOT(stop()));
 
                 thread->start();
             }
@@ -132,5 +135,11 @@ void SocketServer::stopNet()
 void SocketServer::processNet()
 {
     initialization();
+    serverListen();
+}
+
+void SocketServer::clientMassege(QString mass)
+{
+    emit sendNetMassegeSignal(mass);
 }
 

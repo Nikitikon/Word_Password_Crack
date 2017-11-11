@@ -18,6 +18,7 @@
 #include <QTextBrowser>
 #include <QQueue>
 #include <QApplication>
+#include <QTime>
 
 
 #include "exceptreceiver.h"
@@ -40,10 +41,15 @@ public:
     bool setAnswer(QString assumedKey);
     bool getCalcOnClient(quint64 interval[]);
     bool getNeedCalc(quint64 interval[]);
+    int getMask();
+    int getStep();
+    void setMask(int mask);
     QString getTryAnswer();
 
 
     QString fileName;
+    QMutex mutexForSpeedMap;
+    QMap<QString, double> speedMap;
 
 
 
@@ -51,6 +57,8 @@ signals:
     void sendMassegeSignal(QString);
     void finished();
     void stopServer();
+    void sendProgressBarValue(double);
+    void sendSpeed(double);
 
 public slots:
     void erroeStop(QString errorMy);
@@ -74,8 +82,10 @@ private:
     QMutex mutexForAnswerList;
     QMutex mutexForNeedList;
     QMutex mutexForClientCalcList;
+    QMutex mutexBitMasck;
     int bitMasck;
     int passwordStep;
+    bool checkStop;
 
     QLineEdit *fileNameBuff;
     QTextBrowser *outBrowser;
@@ -88,6 +98,7 @@ private:
     bool fromClientCalcToNeedCalc();
     QString createPass(int step);
     bool crackPassword();
+    double calcSpeed(double mainSpeed);
 
 };
 

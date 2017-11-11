@@ -62,6 +62,8 @@ signals:
 private slots:
     void sendMassege(QString mass);
     void sendNetMassege(QString mass);
+    void updateProgressBar(double progres);
+    void visualSpeed(double speed);
 
 };
 
